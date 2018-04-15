@@ -1,5 +1,5 @@
 syntax = "proto2";
-option java_package = "com.github.yeriomin.playstoreapi";
+option java_package = "com.dragons.aurora.playstoreapiv2";
 option java_multiple_files = true;
 
 message AndroidAppDeliveryData {

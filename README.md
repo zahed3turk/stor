@@ -1,10 +1,6 @@
-# play-store-api [![Build Status](https://travis-ci.org/yeriomin/play-store-api.svg?branch=master)](https://travis-ci.org/yeriomin/play-store-api) [![Release](https://jitpack.io/v/yeriomin/play-store-api.svg)](https://jitpack.io/#yeriomin/play-store-api) [![downloads](https://jitpack.io/v/yeriomin/play-store-api/month.svg)](https://jitpack.io/#yeriomin/play-store-api)
+# playstore-api-v2
 
 Google Play Store protobuf API wrapper in java
-
-## Include
-
-Get it from [jitpack](https://jitpack.io/#yeriomin/play-store-api). Or...
 
 ## Build separately
 
@@ -12,7 +8,7 @@ Get it from [jitpack](https://jitpack.io/#yeriomin/play-store-api). Or...
     gradlew :assemble
     gradlew :build
     
-Protobuf classes generation happens on `assemble` step, tests a ran on `build` step.
+Protobuf classes generation happens on `assemble` step, tests a run on `build` step.
 
 ## Usage
 
@@ -82,19 +78,9 @@ Protobuf classes generation happens on `assemble` step, tests a ran on `build` s
         DetailsResponse response = api.details("com.cpuid.cpu_z");
 ```
         
-### Examples
-
-See [tests](https://github.com/yeriomin/play-store-api/blob/master/src/test/java/com/github/yeriomin/playstoreapi/GooglePlayAPITest.java) and [the project which this library was made for](https://github.com/yeriomin/YalpStore) for examples.
-
-### Further studies
-
-Looking through [GooglePlay.proto](https://github.com/yeriomin/play-store-api/blob/master/src/main/proto/GooglePlay.proto) will let you know what responses to expect.
-
 ## License
 
-play-store-api is Free Software: You can use, study share and improve it at your will. Specifically you can redistribute and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+playstore-api-v2 is Free Software: You can use, study share and improve it at your will. Specifically you can redistribute and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 ## Credits
-
-play-store-api is a fork of https://github.com/Akdeniz/google-play-crawler
-play-store-api has [protobuf-java](https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java) built-in. protobuf-java was modified to work with java 1.5 which is required for play-store-api to work on old android versions.
+playstore-api-v2 is a fork of https://github.com/yeriomin/play-store-api

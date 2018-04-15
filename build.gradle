@@ -1,9 +1,9 @@
 apply plugin: 'java'
 
-group = 'com.github.yeriomin'
-version = '0.36'
-sourceCompatibility = JavaVersion.VERSION_1_5
-targetCompatibility = JavaVersion.VERSION_1_5
+group = 'com.dragons.aurora'
+version = '1.0'
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 compileJava.options.encoding = 'UTF-8'
 
 buildscript {
@@ -11,7 +11,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.0'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
     }
 }
 
@@ -20,6 +21,7 @@ repositories {
 }
 
 apply plugin: 'com.google.protobuf'
+apply plugin: 'com.github.dcendents.android-maven'
 
 sourceSets {
     main {
@@ -36,7 +38,7 @@ jar {
 
 dependencies {
     testCompile "junit:junit:4.12"
-    testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.5.0'
+    testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
 }
 
 tasks.withType(JavaCompile) {
@@ -45,7 +47,7 @@ tasks.withType(JavaCompile) {
 
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.0.0'
+        artifact = 'com.google.protobuf:protoc:3.5.1'
     }
     plugins {
         javalite {
