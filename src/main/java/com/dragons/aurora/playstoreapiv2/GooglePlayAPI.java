@@ -271,6 +271,7 @@ public class GooglePlayAPI {
     private AndroidCheckinResponse checkin(byte[] request) throws IOException {
         Map<String, String> headers = getDefaultHeaders();
         headers.put("Content-Type", "application/x-protobuffer");
+        headers.put("Host", "android.clients.google.com");
         byte[] content = client.post(CHECKIN_URL, request, headers);
         return AndroidCheckinResponse.parseFrom(content);
     }
@@ -845,7 +846,6 @@ public class GooglePlayAPI {
         params.put("source", "android");
         params.put("device_country", this.locale.getCountry().toLowerCase());
         params.put("lang", this.locale.getLanguage().toLowerCase());
-        params.put("sdk_version", String.valueOf(this.deviceInfoProvider.getSdkVersion()));
         params.put("client_sig", "38918a453d07199354f8b19af05ec6562ced5788");
         params.put("callerSig", "38918a453d07199354f8b19af05ec6562ced5788");
         return params;
