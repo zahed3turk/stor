@@ -135,8 +135,7 @@ public class PlayStoreApiBuilder {
     }
 
     private String generateGsfId(GooglePlayAPI api) throws IOException, ApiBuilderException {
-        String tokenAc2dm = isEmpty(password) ? tokenDispenserClient.getTokenAc2dm(email) : api.generateAC2DMToken(email, password);
-        return api.generateGsfId(email, tokenAc2dm);
+        return api.generateGsfId();
     }
 
     private String generateToken(GooglePlayAPI api) throws IOException, ApiBuilderException {

@@ -224,22 +224,13 @@ public class GooglePlayAPI {
      * using <code>generateToken()</code> or from returned
      * {@link AndroidCheckinResponse} instance.
      */
-    public String generateGsfId(String email, String ac2dmToken) throws IOException {
+    public String generateGsfId() throws IOException {
         // this first checkin is for generating gsf id
         AndroidCheckinRequest request = this.deviceInfoProvider.generateAndroidCheckinRequest();
-        AndroidCheckinResponse checkinResponse1 = checkin(request.toByteArray());
-        String securityToken = BigInteger.valueOf(checkinResponse1.getSecurityToken()).toString(16);
+        AndroidCheckinResponse checkinResponse = checkin(request.toByteArray());
 
-        // this is the second checkin to match credentials with gsf id
-        AndroidCheckinRequest.Builder checkInbuilder = AndroidCheckinRequest.newBuilder(request);
-        String gsfId = BigInteger.valueOf(checkinResponse1.getAndroidId()).toString(16);
-        AndroidCheckinRequest build = checkInbuilder
-                .setId(new BigInteger(gsfId, 16).longValue())
-                .setSecurityToken(new BigInteger(securityToken, 16).longValue())
-                .addAccountCookie("[" + email + "]")
-                .addAccountCookie(ac2dmToken)
-                .build();
-        deviceCheckinConsistencyToken = checkin(build.toByteArray()).getDeviceCheckinConsistencyToken();
+        String gsfId = BigInteger.valueOf(checkinResponse.getAndroidId()).toString(16);
+        deviceCheckinConsistencyToken = checkinResponse.getDeviceCheckinConsistencyToken();
 
         return gsfId;
     }
@@ -281,78 +272,63 @@ public class GooglePlayAPI {
      * authentication token. This token can be used to login instead of using
      * email and password every time.
      */
-    public String generateToken(String email, String password) throws IOException {
-        Map<String, String> params = getDefaultLoginParams(email, password);
-        params.put("service", "androidmarket");
+    public String generateToken(String email, String aasToken) throws IOException {
+        Map<String, String> params = getDefaultLoginParams(email);
+        params.put("service", "oauth2:https://www.googleapis.com/auth/googleplay");
         params.put("app", "com.android.vending");
+        params.put("oauth2_foreground", "1");
+        params.put("token_request_options", "CAA4AVAB");
+        params.put("check_email", "1");
+        params.put("Token", aasToken);
+        params.put("client_sig", "38918a453d07199354f8b19af05ec6562ced5788");
+        params.put("callerPkg", "com.google.android.gms");
+        params.put("system_partition", "1");
+        params.put("_opt_is_called_from_account_manager", "1");
+        params.put("is_called_from_account_manager", "1");
         Map<String, String> headers = getAuthHeaders();
         headers.put("app", "com.android.vending");
+        if (this.gsfId != null && this.gsfId.length() > 0) {
+            headers.put("device", this.gsfId);
+        }
         byte[] responseBytes = client.post(URL_LOGIN, params, headers);
         Map<String, String> response = parseResponse(new String(responseBytes));
-        String secondRoundToken = null;
-        if (response.containsKey("Token")) {
-            secondRoundToken = generateTokenSecondRound(params, response.get("Token"));
-        }
-        if (null != secondRoundToken) {
-            return secondRoundToken;
-        } else if (response.containsKey("Auth")) {
+        if (response.containsKey("Auth")) {
             return response.get("Auth");
         } else {
             throw new AuthException("Authentication failed! (login)");
         }
     }
 
-    /**
-     * Since mid-october 2017 Auth-token from a single auth request has a time to live.
-     * A second auth request with a secondary token needs to be made to get a token which lives longer.
-     *
-     */
-    protected String generateTokenSecondRound(Map<String, String> previousParams, String secondaryToken) throws IOException {
-        previousParams.put("Token", secondaryToken);
-        if (this.gsfId != null && this.gsfId.length() > 0) {
-            previousParams.put("androidId", this.gsfId);
-        }
-        previousParams.put("check_email", "1");
-        previousParams.put("token_request_options", "CAA4AQ==");
-        previousParams.put("system_partition", "1");
-        previousParams.put("_opt_is_called_from_account_manager", "1");
-        previousParams.remove("Email");
-        previousParams.remove("EncryptedPasswd");
-        Map<String, String> headers = getAuthHeaders();
-        headers.put("app", "com.android.vending");
-        byte[] responseBytes = client.post(URL_LOGIN, previousParams, headers);
-        Map<String, String> response = parseResponse(new String(responseBytes));
-        return response.containsKey("Auth") ? response.get("Auth") : null;
-    }
-
-    /**
-     * Logins AC2DM server and returns authentication string.
-     * This is used to link a device to an account.
-     *
-     */
-    public String generateAC2DMToken(String email, String password) throws IOException {
-        Map<String, String> params = getDefaultLoginParams(email, password);
+    public String generateAASToken(String email, String oauthToken) throws IOException {
+        Map<String, String> params = getDefaultLoginParams(email);
         params.put("service", "ac2dm");
         params.put("add_account", "1");
+        params.put("get_accountid", "1");
+        params.put("ACCESS_TOKEN", "1");
         params.put("callerPkg", "com.google.android.gms");
+        params.put("Token", oauthToken);
+        //params.put("droidguard_results", "...");
         Map<String, String> headers = getAuthHeaders();
+        if (this.gsfId != null && this.gsfId.length() > 0) {
+            headers.put("device", this.gsfId);
+        }
         headers.put("app", "com.google.android.gms");
         byte[] responseBytes = client.post(URL_LOGIN, params, headers);
         Map<String, String> response = parseResponse(new String(responseBytes));
-        if (response.containsKey("Auth")) {
-            return response.get("Auth");
+        if (response.containsKey("Token")) {
+            return response.get("Token");
         } else {
-            throw new AuthException("Authentication failed! (loginAC2DM)");
+            throw new AuthException("Authentication failed! (login aas)");
         }
     }
 
-    public Map<String, String> c2dmRegister(String application, String sender, String email, String password) throws IOException {
+    public Map<String, String> c2dmRegister(String application, String sender, String email, String oauthToken) throws IOException {
         Map<String, String> params = new HashMap<String, String>();
         params.put("app", application);
         params.put("sender", sender);
         params.put("device", new BigInteger(this.gsfId, 16).toString());
         Map<String, String> headers = getDefaultHeaders();
-        headers.put("Authorization", "GoogleLogin auth=" + generateAC2DMToken(email, password));
+        headers.put("Authorization", "GoogleLogin auth=" + generateAASToken(email, oauthToken));
         byte[] responseBytes = client.post(C2DM_REGISTER_URL, params, headers);
         return parseResponse(new String(responseBytes));
     }
@@ -830,23 +806,16 @@ public class GooglePlayAPI {
      * GoogleLoginService(package name : com.google.android.gsf) system APK.
      * But google doesn't seem to care of value of this parameter.
      */
-    protected Map<String, String> getDefaultLoginParams(String email, String password) throws GooglePlayException {
+    protected Map<String, String> getDefaultLoginParams(String email) throws GooglePlayException {
         Map<String, String> params = new HashMap<String, String>();
-        params.put("Email", email);
-        try {
-            params.put("EncryptedPasswd", PasswordEncrypter.encrypt(email, password));
-        } catch (GeneralSecurityException e1) {
-            throw new GooglePlayException("Could not encrypt password", e1);
-        } catch (UnsupportedEncodingException e2) {
-            throw new GooglePlayException("Could not encrypt password", e2);
+        if (this.gsfId != null && this.gsfId.length() > 0) {
+            params.put("androidId", this.gsfId);
         }
-        params.put("accountType", ACCOUNT_TYPE_HOSTED_OR_GOOGLE);
+        params.put("sdk_version", String.valueOf(this.deviceInfoProvider.getSdkVersion()));
+        params.put("Email", email);
         params.put("google_play_services_version", String.valueOf(this.deviceInfoProvider.getPlayServicesVersion()));
-        params.put("has_permission", "1");
-        params.put("source", "android");
         params.put("device_country", this.locale.getCountry().toLowerCase());
         params.put("lang", this.locale.getLanguage().toLowerCase());
-        params.put("client_sig", "38918a453d07199354f8b19af05ec6562ced5788");
         params.put("callerSig", "38918a453d07199354f8b19af05ec6562ced5788");
         return params;
     }
@@ -860,7 +829,7 @@ public class GooglePlayAPI {
     private Map<String, String> getDefaultHeaders() {
         Map<String, String> headers = new HashMap<String, String>();
         if (this.token != null && this.token.length() > 0) {
-            headers.put("Authorization", "GoogleLogin auth=" + this.token);
+            headers.put("Authorization", "Bearer " + this.token);
         }
         headers.put("User-Agent", this.deviceInfoProvider.getUserAgentString());
         if (this.gsfId != null && this.gsfId.length() > 0) {

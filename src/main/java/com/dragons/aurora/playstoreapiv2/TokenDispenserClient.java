@@ -12,7 +12,7 @@ public class TokenDispenserClient {
 
     static private final String PARAMETER_EMAIL = "email";
 
-    static private final int TOKEN_VALIDITY_LENGTH = 100;
+    static private final int TOKEN_VALIDITY_LENGTH = 500;
 
     private String url;
     private HttpClientAdapter httpClient;
