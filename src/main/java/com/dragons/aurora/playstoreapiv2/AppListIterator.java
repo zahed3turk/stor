@@ -100,13 +100,13 @@ abstract public class AppListIterator implements Iterator {
             return GooglePlayAPI.FDFE_URL + rootDoc.getContainerMetadata().getNextPageUrl();
         }
         if (rootDoc.hasRelatedLinks()
-            && rootDoc.getRelatedLinks().hasUnknown1()
-            && rootDoc.getRelatedLinks().getUnknown1().hasUnknown2()
-            && rootDoc.getRelatedLinks().getUnknown1().getUnknown2().hasNextPageUrl()
+                && rootDoc.getRelatedLinks().hasUnknown1()
+                && rootDoc.getRelatedLinks().getUnknown1().hasUnknown2()
+                && rootDoc.getRelatedLinks().getUnknown1().getUnknown2().hasNextPageUrl()
         ) {
             return GooglePlayAPI.FDFE_URL + rootDoc.getRelatedLinks().getUnknown1().getUnknown2().getNextPageUrl();
         }
-        for (DocV2 child: rootDoc.getChildList()) {
+        for (DocV2 child : rootDoc.getChildList()) {
             if (!isRootDoc(child)) {
                 continue;
             }
@@ -139,7 +139,7 @@ abstract public class AppListIterator implements Iterator {
         if (isRootDoc(doc)) {
             return doc;
         }
-        for (DocV2 child: doc.getChildList()) {
+        for (DocV2 child : doc.getChildList()) {
             DocV2 root = getRootDoc(child);
             if (null != root) {
                 return root;
