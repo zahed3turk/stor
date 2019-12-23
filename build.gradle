@@ -4,7 +4,6 @@ group = 'com.dragons.aurora'
 version = '2.4'
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
-compileJava.options.encoding = 'UTF-8'
 
 buildscript {
     repositories {
@@ -47,16 +46,18 @@ tasks.withType(JavaCompile) {
 
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.5.1'
+        artifact = 'com.google.protobuf:protoc:3.11.2'
     }
+
     plugins {
         javalite {
             artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
         }
     }
+
     generateProtoTasks {
         all()*.plugins {
-            javalite { }
+            javalite {}
         }
         all().each { task ->
             task.builtins {
