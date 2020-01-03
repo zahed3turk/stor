@@ -938,6 +938,8 @@ message AppDetails {
     optional EarlyAccessInfo earlyAccessInfo = 36;
     optional string instantLink = 43;
     optional string developerAddress = 45;
+    optional string categoryName = 48;
+    optional string downloadCount = 53;
 }
 message CertificateSet {
     repeated string certificateHash = 1;

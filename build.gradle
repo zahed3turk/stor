@@ -1,4 +1,6 @@
 apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
+apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'com.dragons.aurora'
 version = '2.4'
@@ -19,9 +21,6 @@ repositories {
     jcenter()
 }
 
-apply plugin: 'com.google.protobuf'
-apply plugin: 'com.github.dcendents.android-maven'
-
 sourceSets {
     main {
         java {
@@ -33,11 +32,6 @@ sourceSets {
 
 jar {
     exclude("*.proto")
-}
-
-dependencies {
-    testCompile "junit:junit:4.12"
-    testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
 }
 
 tasks.withType(JavaCompile) {
@@ -56,12 +50,12 @@ protobuf {
     }
 
     generateProtoTasks {
-        all()*.plugins {
-            javalite {}
-        }
         all().each { task ->
             task.builtins {
                 remove java
+            }
+            task.plugins {
+                javalite {}
             }
         }
     }
