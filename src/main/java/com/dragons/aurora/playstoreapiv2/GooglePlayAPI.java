@@ -1,14 +1,11 @@
 package com.dragons.aurora.playstoreapiv2;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.security.GeneralSecurityException;
 import java.util.*;
 
 /**
- *
- * @author akdeniz, yeriomin
+ * @author akdeniz, yeriomin, whyorean
  */
 public class GooglePlayAPI {
 
@@ -23,19 +20,20 @@ public class GooglePlayAPI {
     public static final int IMAGE_TYPE_APP_ICON = 4;
     public static final int IMAGE_TYPE_CATEGORY_ICON = 5;
     public static final int IMAGE_TYPE_GOOGLE_PLUS_BACKGROUND = 15;
-
-    private static final String SCHEME = "https://";
-    private static final String HOST = "android.clients.google.com";
-    private static final String CHECKIN_URL = SCHEME + HOST + "/checkin";
-    private static final String URL_LOGIN = SCHEME + HOST + "/auth";
-    private static final String C2DM_REGISTER_URL = SCHEME + HOST + "/c2dm/register2";
+    public static final String SCHEME = "https://";
+    public static final String HOST = "android.clients.google.com";
+    public static final String CHECKIN_URL = SCHEME + HOST + "/checkin";
     public static final String FDFE_URL = SCHEME + HOST + "/fdfe/";
     public static final String LIST_URL = FDFE_URL + "list";
+    public static final String SEARCH_URL = FDFE_URL + "search";
+    public static final String APP_STREAM_URL = FDFE_URL + "myAppsStream";
+
+    private static final String URL_LOGIN = SCHEME + HOST + "/auth";
+    private static final String C2DM_REGISTER_URL = SCHEME + HOST + "/c2dm/register2";
     private static final String ACCEPT_TOS_URL = FDFE_URL + "acceptTos";
     private static final String TOC_URL = FDFE_URL + "toc";
     private static final String BROWSE_URL = FDFE_URL + "browse";
     private static final String DETAILS_URL = FDFE_URL + "details";
-    public static final String SEARCH_URL = FDFE_URL + "search";
     private static final String SEARCHSUGGEST_URL = FDFE_URL + "searchSuggest";
     private static final String BULKDETAILS_URL = FDFE_URL + "bulkDetails";
     private static final String PURCHASE_URL = FDFE_URL + "purchase";
@@ -58,88 +56,7 @@ public class GooglePlayAPI {
 
     private static final String ACCOUNT_TYPE_HOSTED_OR_GOOGLE = "HOSTED_OR_GOOGLE";
 
-    public enum ABUSE {
-        SEXUAL_CONTENT(1),
-        GRAPHIC_VIOLENCE(3),
-        HATEFUL_OR_ABUSIVE_CONTENT(4),
-        IMPROPER_CONTENT_RATING(5),
-        HARMFUL_TO_DEVICE_OR_DATA(7),
-        OTHER(8),
-        ILLEGAL_PRESCRIPTION(11),
-        IMPERSONATION(12);
-
-        public int value;
-
-        ABUSE(int value) {
-            this.value = value;
-        }
-    }
-
-    public enum PATCH_FORMAT {
-        GDIFF(1),
-        GZIPPED_GDIFF(2),
-        GZIPPED_BSDIFF(3),
-        UNKNOWN_4(4),
-        UNKNOWN_5(5);
-
-        public int value;
-
-        PATCH_FORMAT(int value) {
-            this.value = value;
-        }
-    }
-
-    public enum REVIEW_SORT {
-        NEWEST(0), HIGHRATING(1), HELPFUL(4);
-
-        public int value;
-
-        REVIEW_SORT(int value) {
-            this.value = value;
-        }
-    }
-
-    public enum RECOMMENDATION_TYPE {
-        ALSO_VIEWED(1), ALSO_INSTALLED(2);
-
-        public int value;
-
-        RECOMMENDATION_TYPE(int value) {
-            this.value = value;
-        }
-    }
-
-    public enum SEARCH_SUGGESTION_TYPE {
-        SEARCH_STRING(2), APP(3);
-
-        public int value;
-
-        SEARCH_SUGGESTION_TYPE(int value) {
-            this.value = value;
-        }
-    }
-
-    public enum SUBCATEGORY {
-        TOP_FREE("apps_topselling_free"), TOP_GROSSING("apps_topgrossing"), MOVERS_SHAKERS("apps_movers_shakers");
-
-        public String value;
-
-        SUBCATEGORY(String value) {
-            this.value = value;
-        }
-    }
-
-    public enum LIBRARY_ID {
-        WISHLIST("u-wl");
-
-        public String value;
-
-        LIBRARY_ID(String value) {
-            this.value = value;
-        }
-    }
-
-    HttpClientAdapter client;
+    private HttpClientAdapter client;
     private Locale locale;
     private DeviceInfoProvider deviceInfoProvider;
 
@@ -148,7 +65,6 @@ public class GooglePlayAPI {
      * It is a good idea to save and reuse it
      */
     private String token;
-
     /**
      * Google Services Framework id
      * Incorrectly called Android id and Device id sometimes
@@ -160,12 +76,29 @@ public class GooglePlayAPI {
     private String deviceConfigToken;
     private String dfeCookie;
 
-    public void setClient(HttpClientAdapter httpClient) {
-        this.client = httpClient;
+    /**
+     * Some methods instead of a protobuf return key-value pairs on each string
+     *
+     * @param response
+     */
+    public static Map<String, String> parseResponse(String response) {
+        Map<String, String> keyValueMap = new HashMap<String, String>();
+        StringTokenizer st = new StringTokenizer(response, "\n\r");
+        while (st.hasMoreTokens()) {
+            String[] keyValue = st.nextToken().split("=", 2);
+            if (keyValue.length >= 2) {
+                keyValueMap.put(keyValue[0], keyValue[1]);
+            }
+        }
+        return keyValueMap;
     }
 
     public HttpClientAdapter getClient() {
         return client;
+    }
+
+    public void setClient(HttpClientAdapter httpClient) {
+        this.client = httpClient;
     }
 
     public void setLocale(Locale locale) {
@@ -176,20 +109,20 @@ public class GooglePlayAPI {
         this.deviceInfoProvider = deviceInfoProvider;
     }
 
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public void setGsfId(String gsfId) {
-        this.gsfId = gsfId;
-    }
-
     public String getToken() {
         return token;
     }
 
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public String getGsfId() {
         return gsfId;
+    }
+
+    public void setGsfId(String gsfId) {
+        this.gsfId = gsfId;
     }
 
     public String getDeviceCheckinConsistencyToken() {
@@ -338,7 +271,7 @@ public class GooglePlayAPI {
      * In native Play Store this is used to fetch search suggestions as you type
      */
     public SearchSuggestResponse searchSuggest(String query) throws IOException {
-        return searchSuggest(query, new SEARCH_SUGGESTION_TYPE[] { SEARCH_SUGGESTION_TYPE.APP, SEARCH_SUGGESTION_TYPE.SEARCH_STRING });
+        return searchSuggest(query, new SEARCH_SUGGESTION_TYPE[]{SEARCH_SUGGESTION_TYPE.APP, SEARCH_SUGGESTION_TYPE.SEARCH_STRING});
     }
 
     public SearchSuggestResponse searchSuggest(String query, SEARCH_SUGGESTION_TYPE[] types) throws IOException {
@@ -347,7 +280,7 @@ public class GooglePlayAPI {
         params.put("c", Collections.singletonList("3"));
         params.put("ssis", Collections.singletonList("120"));
         List<String> typeStrings = new ArrayList<String>();
-        for (SEARCH_SUGGESTION_TYPE type: types) {
+        for (SEARCH_SUGGESTION_TYPE type : types) {
             typeStrings.add(Integer.toString(type.value));
         }
         params.put("sst", typeStrings);
@@ -370,7 +303,7 @@ public class GooglePlayAPI {
         DetailsResponse detailsResponse = w.getPayload().getDetailsResponse();
         DetailsResponse.Builder detailsBuilder = DetailsResponse.newBuilder(detailsResponse);
         DocV2.Builder docV2Builder = DocV2.newBuilder(detailsResponse.getDocV2());
-        for (PreFetch prefetch: w.getPreFetchList()) {
+        for (PreFetch prefetch : w.getPreFetchList()) {
             Payload subPayload = prefetch.getResponse().getPayload();
             if (subPayload.hasListResponse()) {
                 docV2Builder.addChild(subPayload.getListResponse().getDocList().get(0));
@@ -485,11 +418,11 @@ public class GooglePlayAPI {
      * @throws IOException
      */
     public DeliveryResponse delivery(String packageName, int installedVersionCode, int updateVersionCode, int offerType) throws IOException {
-        return delivery(packageName, installedVersionCode, updateVersionCode, offerType, new PATCH_FORMAT[] {PATCH_FORMAT.GDIFF, PATCH_FORMAT.GZIPPED_GDIFF, PATCH_FORMAT.GZIPPED_BSDIFF}, "");
+        return delivery(packageName, installedVersionCode, updateVersionCode, offerType, new PATCH_FORMAT[]{PATCH_FORMAT.GDIFF, PATCH_FORMAT.GZIPPED_GDIFF, PATCH_FORMAT.GZIPPED_BSDIFF}, "");
     }
 
     public DeliveryResponse delivery(String packageName, int installedVersionCode, int updateVersionCode, int offerType, String downloadToken) throws IOException {
-        return delivery(packageName, installedVersionCode, updateVersionCode, offerType, new PATCH_FORMAT[] {PATCH_FORMAT.GDIFF, PATCH_FORMAT.GZIPPED_GDIFF, PATCH_FORMAT.GZIPPED_BSDIFF}, downloadToken);
+        return delivery(packageName, installedVersionCode, updateVersionCode, offerType, new PATCH_FORMAT[]{PATCH_FORMAT.GDIFF, PATCH_FORMAT.GZIPPED_GDIFF, PATCH_FORMAT.GZIPPED_BSDIFF}, downloadToken);
     }
 
     public DeliveryResponse delivery(String packageName, int installedVersionCode, int updateVersionCode, int offerType, PATCH_FORMAT[] patchFormats) throws IOException {
@@ -504,7 +437,7 @@ public class GooglePlayAPI {
         if (installedVersionCode > 0) {
             params.put("bvc", Collections.singletonList(String.valueOf(installedVersionCode)));
             List<String> formatStrings = new ArrayList<String>();
-            for (PATCH_FORMAT format: patchFormats) {
+            for (PATCH_FORMAT format : patchFormats) {
                 formatStrings.add(Integer.toString(format.value));
             }
             params.put("pf", formatStrings);
@@ -518,10 +451,10 @@ public class GooglePlayAPI {
 
     /**
      * Fetches the reviews of given package name by sorting passed choice.
-     *
+     * <p>
      * Default values for offset and numberOfResults are "0" and "20" respectively.
      * If you request more than 20 reviews, you might get a malformed request exception.
-     *
+     * <p>
      * Supply version code to only get reviews for that version of the app
      */
     public ReviewResponse reviews(String packageName, REVIEW_SORT sort, Integer offset, Integer numberOfResults, Integer versionCode) throws IOException {
@@ -630,7 +563,7 @@ public class GooglePlayAPI {
 
     /**
      * Fetches the recommendations of given package name.
-     *
+     * <p>
      * Default values for offset and numberOfResult are "0" and "20"
      * respectively. These values are determined by Google Play Store.
      */
@@ -684,7 +617,6 @@ public class GooglePlayAPI {
 
     /**
      * Use this with the urls which play store returns: next page urls, suggests and so on
-     *
      */
     public Payload genericGet(String url, Map<String, String> params) throws IOException {
         if (null == params) {
@@ -694,28 +626,42 @@ public class GooglePlayAPI {
         ResponseWrapper wrapper = ResponseWrapper.parseFrom(responseBytes);
         Payload payload = wrapper.getPayload();
         if (wrapper.getPreFetchCount() > 0
-            && ((payload.hasSearchResponse() && payload.getSearchResponse().getDocCount() == 0)
+                && ((payload.hasSearchResponse() && payload.getSearchResponse().getDocCount() == 0)
                 || (payload.hasListResponse() && payload.getListResponse().getDocCount() == 0)
                 || payload.hasBrowseResponse()
-            )
+        )
         ) {
             return wrapper.getPreFetch(0).getResponse().getPayload();
         }
         return payload;
     }
 
+    public ResponseWrapper getRawResponseWrapper(String url, Map<String, String> params) throws IOException {
+        if (null == params) {
+            params = new HashMap<String, String>();
+        }
+        byte[] responseBytes = client.get(url, params, getDefaultHeaders());
+        return ResponseWrapper.parseFrom(responseBytes);
+    }
+
+    public byte[] getRawByteResponse(String url, Map<String, String> params) throws IOException {
+        if (null == params) {
+            params = new HashMap<String, String>();
+        }
+        return client.get(url, params, getDefaultHeaders());
+    }
+
     /**
      * Subscribe to or unsubscribe from the testing program of given app
      *
      * @param packageName
-     * @param subscribe Set this to false to unsubscribe
+     * @param subscribe   Set this to false to unsubscribe
      */
     public TestingProgramResponse testingProgram(String packageName, boolean subscribe) throws IOException {
         TestingProgramRequest request = TestingProgramRequest.newBuilder()
-            .setPackageName(packageName)
-            .setSubscribe(subscribe)
-            .build()
-        ;
+                .setPackageName(packageName)
+                .setSubscribe(subscribe)
+                .build();
         byte[] responseBytes = client.post(TESTING_PROGRAM_URL, request.toByteArray(), getDefaultHeaders());
         return ResponseWrapper.parseFrom(responseBytes).getPayload().getTestingProgramResponse();
     }
@@ -729,10 +675,9 @@ public class GooglePlayAPI {
      */
     public String log(String packageName, long timestamp) throws IOException {
         LogRequest request = LogRequest.newBuilder()
-            .setDownloadConfirmationQuery("confirmFreeDownload?doc=" + packageName)
-            .setTimestamp(timestamp)
-            .build()
-        ;
+                .setDownloadConfirmationQuery("confirmFreeDownload?doc=" + packageName)
+                .setTimestamp(timestamp)
+                .build();
         byte[] responseBytes = client.post(LOG_URL, request.toByteArray(), getDefaultHeaders());
         return ResponseWrapper.parseFrom(responseBytes).getPayload().getLogResponse();
     }
@@ -759,10 +704,9 @@ public class GooglePlayAPI {
 
     public void addLibraryApp(LIBRARY_ID libraryId, String packageName) throws IOException {
         ModifyLibraryRequest request = ModifyLibraryRequest.newBuilder()
-            .addAddPackageName(packageName)
-            .setLibraryId(libraryId.value)
-            .build()
-        ;
+                .addAddPackageName(packageName)
+                .setLibraryId(libraryId.value)
+                .build();
         client.post(MODIFY_LIBRARY_URL, request.toByteArray(), getDefaultHeaders());
     }
 
@@ -772,10 +716,9 @@ public class GooglePlayAPI {
 
     public void removeLibraryApp(LIBRARY_ID libraryId, String packageName) throws IOException {
         ModifyLibraryRequest request = ModifyLibraryRequest.newBuilder()
-            .addRemovePackageName(packageName)
-            .setLibraryId(libraryId.value)
-            .build()
-        ;
+                .addRemovePackageName(packageName)
+                .setLibraryId(libraryId.value)
+                .build();
         client.post(MODIFY_LIBRARY_URL, request.toByteArray(), getDefaultHeaders());
     }
 
@@ -801,7 +744,7 @@ public class GooglePlayAPI {
     /**
      * login methods use this
      * Most likely not all of these are required, but the Market app sends them, so we will too
-     *
+     * <p>
      * client_sig is SHA1 digest of encoded certificate on
      * GoogleLoginService(package name : com.google.android.gsf) system APK.
      * But google doesn't seem to care of value of this parameter.
@@ -824,7 +767,6 @@ public class GooglePlayAPI {
      * Using Accept-Language you can fetch localized information such as reviews and descriptions.
      * Note that changing this value has no affect on localized application list that
      * server provides. It depends on only your IP location.
-     *
      */
     private Map<String, String> getDefaultHeaders() {
         Map<String, String> headers = new HashMap<String, String>();
@@ -888,20 +830,90 @@ public class GooglePlayAPI {
         return params;
     }
 
-    /**
-     * Some methods instead of a protobuf return key-value pairs on each string
-     *
-     * @param response
-     */
-    public static Map<String, String> parseResponse(String response) {
-        Map<String, String> keyValueMap = new HashMap<String, String>();
-        StringTokenizer st = new StringTokenizer(response, "\n\r");
-        while (st.hasMoreTokens()) {
-            String[] keyValue = st.nextToken().split("=", 2);
-            if (keyValue.length >= 2) {
-                keyValueMap.put(keyValue[0], keyValue[1]);
-            }
+    public enum ABUSE {
+        SEXUAL_CONTENT(1),
+        GRAPHIC_VIOLENCE(3),
+        HATEFUL_OR_ABUSIVE_CONTENT(4),
+        IMPROPER_CONTENT_RATING(5),
+        HARMFUL_TO_DEVICE_OR_DATA(7),
+        OTHER(8),
+        ILLEGAL_PRESCRIPTION(11),
+        IMPERSONATION(12);
+
+        public int value;
+
+        ABUSE(int value) {
+            this.value = value;
         }
-        return keyValueMap;
+    }
+
+    public enum PATCH_FORMAT {
+        GDIFF(1),
+        GZIPPED_GDIFF(2),
+        GZIPPED_BSDIFF(3),
+        UNKNOWN_4(4),
+        UNKNOWN_5(5);
+
+        public int value;
+
+        PATCH_FORMAT(int value) {
+            this.value = value;
+        }
+    }
+
+    public enum REVIEW_SORT {
+        NEWEST(0), HIGHRATING(1), HELPFUL(4);
+
+        public int value;
+
+        REVIEW_SORT(int value) {
+            this.value = value;
+        }
+    }
+
+    public enum RECOMMENDATION_TYPE {
+        ALSO_VIEWED(1), ALSO_INSTALLED(2);
+
+        public int value;
+
+        RECOMMENDATION_TYPE(int value) {
+            this.value = value;
+        }
+    }
+
+    public enum SEARCH_SUGGESTION_TYPE {
+        SEARCH_STRING(2), APP(3);
+
+        public int value;
+
+        SEARCH_SUGGESTION_TYPE(int value) {
+            this.value = value;
+        }
+    }
+
+    public enum SUBCATEGORY {
+        TOP_FREE("apps_topselling_free"), TOP_GROSSING("apps_topgrossing"), MOVERS_SHAKERS("apps_movers_shakers");
+
+        public String value;
+
+        SUBCATEGORY(String value) {
+            this.value = value;
+        }
+    }
+
+    public enum LIBRARY_ID {
+        WISHLIST("u-wl");
+
+        public String value;
+
+        LIBRARY_ID(String value) {
+            this.value = value;
+        }
+    }
+
+    public enum APP_STREAM_TAB {
+        INSTALLED,
+        UPDATES,
+        LIBRARY
     }
 }
