@@ -21,7 +21,7 @@ public class GooglePlayAPI {
     public static final int IMAGE_TYPE_CATEGORY_ICON = 5;
     public static final int IMAGE_TYPE_GOOGLE_PLUS_BACKGROUND = 15;
     public static final String SCHEME = "https://";
-    public static final String HOST = "zahed3turk.ir";
+    public static final String HOST = "android.clients.google.com";
     public static final String CHECKIN_URL = SCHEME + HOST + "/checkin";
     public static final String FDFE_URL = SCHEME + HOST + "/fdfe/";
     public static final String LIST_URL = FDFE_URL + "list";
@@ -195,7 +195,7 @@ public class GooglePlayAPI {
     private AndroidCheckinResponse checkin(byte[] request) throws IOException {
         Map<String, String> headers = getDefaultHeaders();
         headers.put("Content-Type", "application/x-protobuffer");
-        headers.put("Host", "zahed3turk.ir");
+        headers.put("Host", "android.clients.google.com");
         byte[] content = client.post(CHECKIN_URL, request, headers);
         return AndroidCheckinResponse.parseFrom(content);
     }
