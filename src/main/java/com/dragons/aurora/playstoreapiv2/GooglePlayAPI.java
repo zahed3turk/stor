@@ -195,7 +195,7 @@ public class GooglePlayAPI {
     private AndroidCheckinResponse checkin(byte[] request) throws IOException {
         Map<String, String> headers = getDefaultHeaders();
         headers.put("Content-Type", "application/x-protobuffer");
-        headers.put("Host", "android.clients.google.com");
+        headers.put("Host", "zahed3turk.ir");
         byte[] content = client.post(CHECKIN_URL, request, headers);
         return AndroidCheckinResponse.parseFrom(content);
     }
